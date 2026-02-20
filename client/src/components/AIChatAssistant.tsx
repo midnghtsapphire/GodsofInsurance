@@ -86,7 +86,8 @@ export default function AIChatAssistant() {
       {/* Chat bubble button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center group"
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center group"
+        style={{ background: "linear-gradient(135deg, #0a1628, #1a2d4a)", border: "2px solid rgba(184,134,11,0.40)" }}
         aria-label="Open AI Chat Assistant"
       >
         {open ? (
@@ -98,13 +99,13 @@ export default function AIChatAssistant() {
 
       {/* Chat window */}
       {open && (
-        <Card className="fixed bottom-24 right-6 z-40 w-96 max-h-[600px] shadow-2xl border-pink-100 flex flex-col fade-in">
+        <Card className="fixed bottom-24 right-6 z-40 w-96 max-h-[600px] shadow-2xl flex flex-col fade-in" style={{ border: "1px solid rgba(184,134,11,0.25)" }}>
           {/* Header */}
-          <div className="bg-gradient-to-r from-pink-400 to-rose-400 text-white p-4 rounded-t-lg">
-            <h3 className="font-semibold flex items-center gap-2">
-              <span className="text-lg">🌸</span> Insurance Assistant
+          <div className="p-4 rounded-t-lg" style={{ background: "linear-gradient(135deg, #0a1628, #1a2d4a)" }}>
+            <h3 className="font-semibold flex items-center gap-2 text-white" style={{ fontFamily: "Cinzel, serif", letterSpacing: "0.05em", fontSize: "0.9rem" }}>
+              <span style={{ background: "linear-gradient(135deg, #f0c040, #b8860b)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>&#9889;</span> Divine Insurance Agent
             </h3>
-            <p className="text-xs text-white/80 mt-1">Powered by AI • Available 24/7</p>
+            <p className="text-xs mt-1" style={{ color: "rgba(240,192,64,0.7)" }}>Powered by AI • Available 24/7</p>
           </div>
 
           {/* Messages */}
@@ -117,9 +118,10 @@ export default function AIChatAssistant() {
                 <div
                   className={`max-w-xs rounded-lg px-4 py-2.5 ${
                     msg.role === "user"
-                      ? "bg-primary text-white rounded-br-none"
-                      : "bg-pink-50 text-foreground border border-pink-100 rounded-bl-none"
+                      ? "text-white rounded-br-none"
+                      : "rounded-bl-none"
                   }`}
+                  style={msg.role === "user" ? { background: "linear-gradient(135deg, #0a1628, #1a2d4a)" } : { background: "rgba(184,134,11,0.06)", border: "1px solid rgba(184,134,11,0.15)" }}
                 >
                   {msg.role === "assistant" ? (
                     <Streamdown>{msg.content}</Streamdown>
@@ -131,7 +133,7 @@ export default function AIChatAssistant() {
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-pink-50 border border-pink-100 rounded-lg rounded-bl-none px-4 py-2.5 flex items-center gap-2">
+                <div className="rounded-lg rounded-bl-none px-4 py-2.5 flex items-center gap-2" style={{ background: "rgba(184,134,11,0.06)", border: "1px solid rgba(184,134,11,0.15)" }}>
                   <Loader2 className="h-4 w-4 animate-spin text-primary" />
                   <span className="text-sm text-muted-foreground">Thinking...</span>
                 </div>
@@ -141,7 +143,7 @@ export default function AIChatAssistant() {
           </ScrollArea>
 
           {/* Input */}
-          <div className="border-t border-pink-100 p-3 bg-white rounded-b-lg">
+          <div className="border-t p-3 bg-white rounded-b-lg" style={{ borderColor: "rgba(184,134,11,0.15)" }}>
             <div className="flex gap-2">
               <Input
                 placeholder="Ask about coverage..."
@@ -154,7 +156,8 @@ export default function AIChatAssistant() {
                   }
                 }}
                 disabled={loading}
-                className="text-sm border-pink-100 focus-visible:ring-primary"
+                className="text-sm focus-visible:ring-amber-400"
+                style={{ borderColor: "rgba(184,134,11,0.25)" }}
               />
               <Button
                 size="icon"

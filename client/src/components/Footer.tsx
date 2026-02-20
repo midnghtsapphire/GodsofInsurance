@@ -1,5 +1,7 @@
-import { Shield, Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Zap } from "lucide-react";
 import { Link } from "wouter";
+
+const ZEUS_ICON_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663032705003/oQmTFFKNyOEjtgfS.png";
 
 const footerLinks = {
   Insurance: [
@@ -26,26 +28,43 @@ const footerLinks = {
 
 export default function Footer() {
   return (
-    <footer className="bg-foreground text-background/80">
+    <footer style={{ background: "#0a1628", color: "rgba(255,255,255,0.7)" }}>
       <div className="container py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center">
-                <Shield className="h-5 w-5 text-primary-foreground" />
-              </div>
+            <div className="flex items-center gap-3">
+              <img
+                src={ZEUS_ICON_URL}
+                alt="Zeus — Gods of Insurance"
+                className="w-10 h-10 rounded-full ring-2 ring-amber-400/30"
+              />
               <div>
-                <div className="text-lg font-bold text-background">ReinstatePro</div>
-                <div className="text-[10px] tracking-widest uppercase text-background/50">Gods of Insurance</div>
+                <div
+                  className="text-lg font-bold text-white"
+                  style={{ fontFamily: "Cinzel, serif", letterSpacing: "0.05em" }}
+                >
+                  Gods of Insurance
+                </div>
+                <div className="text-[10px] tracking-[0.2em] uppercase text-amber-500/70">
+                  Insurance of the Gods
+                </div>
               </div>
             </div>
-            <p className="text-sm leading-relaxed text-background/60">
+            <p className="text-sm leading-relaxed text-slate-400">
               Multi-vertical insurance platform. Fast, compliant filings for SR-22, FR-44, burial, tiny home, pet, and gig economy coverage.
             </p>
-            <div className="space-y-2 text-sm text-background/50">
-              <div className="flex items-center gap-2"><Mail className="h-4 w-4" /> support@reinstatepro.com</div>
-              <div className="flex items-center gap-2"><Phone className="h-4 w-4" /> (888) 555-0199</div>
+            {/* AI Phone Agent highlight */}
+            <div
+              className="flex items-center gap-2 rounded-lg px-3 py-2"
+              style={{ background: "rgba(184,134,11,0.10)", border: "1px solid rgba(184,134,11,0.20)" }}
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-xs text-amber-300 font-medium">AI Phone Agent — 24/7</span>
+            </div>
+            <div className="space-y-2 text-sm text-slate-500">
+              <div className="flex items-center gap-2"><Mail className="h-4 w-4" /> support@godsofinsurance.com</div>
+              <div className="flex items-center gap-2"><Phone className="h-4 w-4" /> AI Agent: 24/7</div>
               <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Nationwide Coverage</div>
             </div>
           </div>
@@ -53,12 +72,19 @@ export default function Footer() {
           {/* Link Columns */}
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title}>
-              <h4 className="font-semibold text-background mb-4 text-sm tracking-wide uppercase">{title}</h4>
+              <h4
+                className="font-semibold text-white mb-4 text-xs tracking-[0.15em] uppercase"
+                style={{ fontFamily: "Cinzel, serif" }}
+              >
+                {title}
+              </h4>
               <ul className="space-y-2.5">
                 {links.map((link) => (
                   <li key={link.label}>
                     <Link href={link.href}>
-                      <span className="text-sm text-background/50 hover:text-background transition-colors">{link.label}</span>
+                      <span className="text-sm text-slate-500 hover:text-amber-400 transition-colors cursor-pointer">
+                        {link.label}
+                      </span>
                     </Link>
                   </li>
                 ))}
@@ -67,12 +93,16 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 pt-8 border-t border-background/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-background/40">
-            &copy; {new Date().getFullYear()} ReinstatePro — Gods of Insurance. All rights reserved.
+        {/* Bottom bar */}
+        <div
+          className="mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <p className="text-xs text-slate-600">
+            &copy; {new Date().getFullYear()} Gods of Insurance. All rights reserved. FOSS-First Platform.
           </p>
-          <p className="text-xs text-background/30">
-            Insurance products are offered through licensed carriers. ReinstatePro is a lead generation platform, not an insurance carrier.
+          <p className="text-xs text-slate-700">
+            Insurance products are offered through licensed carriers. Gods of Insurance is a lead generation platform, not an insurance carrier.
           </p>
         </div>
       </div>

@@ -20,7 +20,8 @@ export default function AccessibilityPanel() {
         <Button
           variant="outline"
           size="icon"
-          className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full shadow-card bg-primary text-primary-foreground hover:bg-primary/90 border-0"
+          className="fixed bottom-24 right-6 z-50 h-12 w-12 rounded-full shadow-card border-0"
+          style={{ background: "linear-gradient(135deg, #b8860b, #8b6914)", color: "white" }}
           aria-label="Accessibility settings"
         >
           <Accessibility className="h-5 w-5" />

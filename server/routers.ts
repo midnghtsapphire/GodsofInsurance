@@ -10,6 +10,7 @@ import {
   getTokenBalance, addTokenTransaction, getStateComplianceData,
   trackEvent, getAnalyticsSummary, getLeadsByVertical, getLeadsByState,
   getAllUsers,
+  createPublicLead, getPublicLeads, updatePublicLeadStatus, getPublicLeadStats,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 
@@ -31,7 +32,7 @@ export const appRouter = router({
     }),
   }),
 
-  // ─── Quote Submissions ──────────────────────────────────────────────
+  // --- Quote Submissions ----------------------------------------------
   quotes: router({
     submit: publicProcedure
       .input(z.object({
@@ -87,7 +88,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Subscriptions & Tokens ─────────────────────────────────────────
+  // --- Subscriptions & Tokens -----------------------------------------
   billing: router({
     getSubscription: protectedProcedure.query(async ({ ctx }) => {
       const sub = await getUserSubscription(ctx.user.id);
@@ -109,7 +110,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── State Compliance ───────────────────────────────────────────────
+  // --- State Compliance -----------------------------------------------
   compliance: router({
     getByState: publicProcedure
       .input(z.object({ stateCode: z.string().length(2) }))
@@ -123,7 +124,7 @@ export const appRouter = router({
     }),
   }),
 
-  // ─── AI Chat Assistant ────────────────────────────────────────────────
+  // --- AI Chat Assistant ------------------------------------------------
   ai: router({
     chat: publicProcedure
       .input(z.object({
@@ -235,7 +236,130 @@ Be friendly, professional, and concise. Always encourage users to get a free quo
        }),
   }),
 
-  // ─── Analytics (Admin) ──────────────────────────────────────────────
+  // --- Lead Generation Engine (Public Records) -----------------------
+  leadGen: router({
+    // Seed a lead from public records (admin or system)
+    seed: adminProcedure
+      .input(z.object({
+        sourceType: z.enum(["marriage_license", "home_purchase", "business_filing", "birth_record", "divorce_record", "vehicle_registration"]),
+        sourceState: z.string().length(2),
+        sourceCounty: z.string().optional(),
+        recordDate: z.string().optional(),
+        fullName: z.string().optional(),
+        email: z.string().email().optional(),
+        phone: z.string().optional(),
+        address: z.string().optional(),
+        suggestedVertical: z.enum(["sr22_fr44", "burial", "tiny_home", "pet", "gig_economy", "life", "home"]),
+        rawData: z.any().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await createPublicLead({
+          ...input,
+          recordDate: input.recordDate ? new Date(input.recordDate) : undefined,
+        });
+        return { success: true };
+      }),
+
+    // Bulk seed from AI-analyzed public data
+    bulkSeed: adminProcedure
+      .input(z.object({
+        sourceType: z.enum(["marriage_license", "home_purchase", "business_filing", "birth_record", "divorce_record", "vehicle_registration"]),
+        sourceState: z.string().length(2),
+        rawText: z.string().min(10),
+      }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a lead extraction assistant for an insurance platform. Extract individual leads from public record data and return them as JSON. For each lead, determine the best insurance vertical based on the record type:\n- marriage_license -> life, home\n- home_purchase -> home, life\n- business_filing -> gig_economy, life\n- birth_record -> life, burial\n- divorce_record -> life, sr22_fr44\n- vehicle_registration -> sr22_fr44\n\nReturn JSON array: [{fullName, email, phone, address, suggestedVertical, notes}]`,
+            },
+            {
+              role: "user",
+              content: `Extract leads from this ${input.sourceType} data for ${input.sourceState}:\n\n${input.rawText}`,
+            },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "leads_extraction",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  leads: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        fullName: { type: "string" },
+                        email: { type: "string" },
+                        phone: { type: "string" },
+                        address: { type: "string" },
+                        suggestedVertical: { type: "string", enum: ["sr22_fr44", "burial", "tiny_home", "pet", "gig_economy", "life", "home"] },
+                        notes: { type: "string" },
+                      },
+                      required: ["fullName", "suggestedVertical"],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ["leads"],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+
+        const rawContent = response.choices?.[0]?.message?.content;
+        const parsed = typeof rawContent === "string" ? JSON.parse(rawContent) : { leads: [] };
+        const leads = parsed.leads ?? [];
+
+        for (const lead of leads) {
+          await createPublicLead({
+            sourceType: input.sourceType,
+            sourceState: input.sourceState,
+            fullName: lead.fullName,
+            email: lead.email || undefined,
+            phone: lead.phone || undefined,
+            address: lead.address || undefined,
+            suggestedVertical: lead.suggestedVertical,
+            rawData: lead,
+          });
+        }
+
+        return { seeded: leads.length };
+      }),
+
+    list: adminProcedure
+      .input(z.object({
+        status: z.enum(["new", "contacted", "qualified", "converted", "dead"]).optional(),
+        sourceType: z.enum(["marriage_license", "home_purchase", "business_filing", "birth_record", "divorce_record", "vehicle_registration"]).optional(),
+        sourceState: z.string().length(2).optional(),
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      }))
+      .query(async ({ input }) => {
+        return getPublicLeads(input);
+      }),
+
+    updateStatus: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["new", "contacted", "qualified", "converted", "dead"]),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await updatePublicLeadStatus(input.id, input.status, input.notes);
+        return { success: true };
+      }),
+
+    stats: adminProcedure.query(async () => {
+      return getPublicLeadStats();
+    }),
+  }),
+
+  // --- Analytics (Admin) ----------------------------------------------
   analytics: router({
     summary: adminProcedure.query(async () => {
       return getAnalyticsSummary();

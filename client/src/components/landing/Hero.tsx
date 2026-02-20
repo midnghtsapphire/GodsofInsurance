@@ -1,11 +1,16 @@
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight, CheckCircle2, Star } from "lucide-react";
+import { ArrowRight, Zap, Phone, Shield, Star, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
 
-const CHIBI_MASCOT  = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663032705003/qsUIQWHkpeRKWQjA.png";
-const SAKURA_LEFT   = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663032705003/WijUsCIssHppvmND.png";
-const SAKURA_RIGHT  = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663032705003/puTyGWFWQvkjsbWj.png";
+const ZEUS_SPLASH_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663032705003/bQPfvCwlYTQKsRnC.png";
+const ZEUS_ICON_URL   = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663032705003/oQmTFFKNyOEjtgfS.png";
+
+const stats = [
+  { value: "50+",   label: "States Covered" },
+  { value: "24/7",  label: "AI Phone Agent" },
+  { value: "10K+",  label: "Agents Served" },
+  { value: "$0",    label: "Lead Fees" },
+];
 
 const trustPoints = [
   "SR-22 filed in minutes",
@@ -14,132 +19,185 @@ const trustPoints = [
   "A+ rated carriers",
 ];
 
-const stats = [
-  { value: "50K+",  label: "Policies Filed" },
-  { value: "4.9★",  label: "Avg Rating" },
-  { value: "15 min", label: "Avg Filing Time" },
-  { value: "50",    label: "States Covered" },
-];
-
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-white pt-8 pb-16 md:pt-12 md:pb-24">
-      {/* Sakura branch decorations */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <img src={SAKURA_LEFT}  alt="" className="absolute left-0 top-0 w-[380px] md:w-[480px] opacity-[0.20] select-none" />
-        <img src={SAKURA_RIGHT} alt="" className="absolute right-0 top-0 w-[380px] md:w-[480px] opacity-[0.20] select-none" />
-        {/* Soft pink radial glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_45%_at_50%_0%,oklch(0.92_0.05_5/0.20),transparent)]" />
+    <section className="relative min-h-screen flex flex-col overflow-hidden">
+      {/* Zeus splash background */}
+      <div className="absolute inset-0">
+        <img
+          src={ZEUS_SPLASH_URL}
+          alt="Zeus seated on his golden throne — Insurance of the Gods"
+          className="w-full h-full object-cover object-center"
+        />
+        {/* Gradient overlays for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a1628]/92 via-[#0a1628]/65 to-[#0a1628]/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628]/85 via-transparent to-[#0a1628]/25" />
       </div>
 
-      <div className="container relative">
-        <div className="grid lg:grid-cols-2 gap-10 items-center">
-          {/* Left: Copy */}
-          <div className="text-center lg:text-left space-y-6 fade-in-up">
-            <Badge className="bg-pink-50 text-pink-600 border border-pink-200 text-xs font-semibold tracking-wide px-3 py-1">
-              🌸 Insurance of the Gods — FOSS-First Platform
-            </Badge>
-
-            <h1
-              className="text-4xl md:text-5xl lg:text-[3.25rem] font-bold text-foreground leading-[1.15]"
-              style={{ fontFamily: "var(--font-display)" }}
+      {/* Content */}
+      <div className="relative z-10 flex-1 flex items-center">
+        <div className="container py-24 md:py-32">
+          <div className="max-w-2xl">
+            {/* Badge */}
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-6 fade-in"
+              style={{
+                background: "rgba(184, 134, 11, 0.15)",
+                border: "1px solid rgba(184, 134, 11, 0.35)",
+              }}
             >
-              Coverage as{" "}
-              <span className="relative inline-block text-primary">
-                divine
-                <span className="absolute -bottom-1 left-0 right-0 h-[3px] bg-gradient-to-r from-pink-300 to-rose-400 rounded-full opacity-70" />
-              </span>{" "}
-              as it gets
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-amber-300 text-xs font-medium tracking-widest uppercase"
+                style={{ fontFamily: "Cinzel, serif" }}>
+                Insurance of the Gods
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h1
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4 fade-in-up"
+              style={{ fontFamily: "Cinzel, serif", letterSpacing: "0.02em" }}
+            >
+              Divine Protection
+              <br />
+              <span style={{
+                background: "linear-gradient(135deg, #f0c040, #b8860b, #e8d080)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}>
+                For Every Life Event
+              </span>
             </h1>
 
-            <p className="text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0 leading-relaxed">
+            {/* Sub-headline */}
+            <p
+              className="text-lg text-slate-300 mb-3 leading-relaxed fade-in-up"
+              style={{ animationDelay: "0.1s" }}
+            >
               SR-22 · FR-44 · Burial · Tiny Home · Pet · Gig Economy — all verticals, one platform.
               Fast filings, transparent pricing, and AI-powered quote comparison.
             </p>
 
+            {/* Phone answering promise */}
+            <div className="flex items-center gap-2 mb-8 fade-in-up" style={{ animationDelay: "0.15s" }}>
+              <div
+                className="flex items-center gap-2 rounded-full px-3 py-1.5"
+                style={{
+                  background: "rgba(184, 134, 11, 0.10)",
+                  border: "1px solid rgba(184, 134, 11, 0.25)",
+                }}
+              >
+                <Phone className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-amber-300 text-xs font-medium">
+                  Phone Answering Everything — 24/7 AI Agent
+                </span>
+              </div>
+            </div>
+
             {/* Trust bullets */}
-            <ul className="flex flex-wrap gap-x-5 gap-y-2 justify-center lg:justify-start">
+            <ul className="flex flex-wrap gap-x-5 gap-y-2 mb-8 fade-in-up" style={{ animationDelay: "0.18s" }}>
               {trustPoints.map((pt) => (
-                <li key={pt} className="flex items-center gap-1.5 text-sm text-foreground/65">
-                  <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <li key={pt} className="flex items-center gap-1.5 text-sm text-slate-300">
+                  <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />
                   {pt}
                 </li>
               ))}
             </ul>
 
             {/* CTAs */}
-            <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+            <div className="flex flex-wrap gap-3 mb-10 fade-in-up" style={{ animationDelay: "0.2s" }}>
               <Link href="/quote">
                 <Button
                   size="lg"
-                  className="bg-primary hover:bg-primary/90 text-white shadow-md hover:shadow-lg transition-all gap-2 px-7"
+                  className="font-bold shadow-xl hover:shadow-2xl transition-all group"
+                  style={{
+                    background: "linear-gradient(135deg, #f0c040, #b8860b)",
+                    color: "#0a1628",
+                    fontFamily: "Cinzel, serif",
+                    letterSpacing: "0.08em",
+                    fontSize: "0.85rem",
+                  }}
                 >
-                  Get Your Free Quote
-                  <ArrowRight className="h-4 w-4" />
+                  <Zap className="w-4 h-4 mr-2" />
+                  Get Divine Coverage
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Link href="/coverage">
+              <Link href="/verticals">
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-pink-200 text-foreground hover:bg-pink-50 gap-2 px-7"
+                  className="backdrop-blur-sm"
+                  style={{
+                    borderColor: "rgba(255,255,255,0.3)",
+                    color: "white",
+                    fontFamily: "Cinzel, serif",
+                    letterSpacing: "0.06em",
+                    fontSize: "0.8rem",
+                    background: "rgba(255,255,255,0.05)",
+                  }}
                 >
-                  Learn About SR-22
+                  <Shield className="w-4 h-4 mr-2" />
+                  Explore Coverage
                 </Button>
               </Link>
             </div>
 
-            {/* Social proof */}
-            <div className="flex items-center gap-2 justify-center lg:justify-start text-sm text-muted-foreground">
-              <div className="flex -space-x-1.5">
-                {["🧑", "👩", "🧔", "👱"].map((e, i) => (
-                  <div key={i} className="w-7 h-7 rounded-full bg-pink-100 border-2 border-white flex items-center justify-center text-xs">
-                    {e}
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center gap-1">
-                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                <span className="font-semibold text-foreground">4.9</span>
-              </div>
-              <span>from 2,400+ verified customers</span>
-            </div>
-          </div>
-
-          {/* Right: Chibi mascot + stats card */}
-          <div className="flex flex-col items-center gap-5">
-            {/* Mascot with soft glow */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-radial from-pink-200/30 via-pink-100/10 to-transparent rounded-full blur-2xl scale-110" />
+            {/* Zeus medallion + FOSS badge */}
+            <div className="flex items-center gap-4 fade-in-up" style={{ animationDelay: "0.3s" }}>
               <img
-                src={CHIBI_MASCOT}
-                alt="Gods of Insurance mascot — chibi goddess in sakura kimono holding a golden shield"
-                className="relative w-60 md:w-72 lg:w-64 xl:w-72 float select-none drop-shadow-lg"
-                loading="eager"
+                src={ZEUS_ICON_URL}
+                alt="Zeus medallion"
+                className="w-12 h-12 rounded-full ring-2 ring-amber-400/40"
               />
-            </div>
-
-            {/* Stats card */}
-            <div className="w-full max-w-xs bg-white rounded-2xl border border-pink-100 shadow-md p-5">
-              <p className="text-[10px] font-bold text-pink-400 uppercase tracking-widest mb-4 text-center">
-                Platform Stats
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                {stats.map((s) => (
-                  <div key={s.label} className="text-center">
-                    <div
-                      className="text-2xl font-bold text-primary"
-                      style={{ fontFamily: "var(--font-display)" }}
-                    >
-                      {s.value}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{s.label}</div>
-                  </div>
-                ))}
+              <div>
+                <div className="text-white text-sm font-semibold" style={{ fontFamily: "Cinzel, serif" }}>
+                  FOSS-First Platform
+                </div>
+                <div className="text-slate-400 text-xs">
+                  Open-source stack · No vendor lock-in · Agent-owned leads
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Stats bar */}
+      <div
+        className="relative z-10 border-t backdrop-blur-md"
+        style={{
+          borderColor: "rgba(255,255,255,0.08)",
+          background: "rgba(10, 22, 40, 0.80)",
+        }}
+      >
+        <div className="container py-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {stats.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div
+                  className="text-2xl font-bold"
+                  style={{
+                    fontFamily: "Cinzel, serif",
+                    background: "linear-gradient(135deg, #f0c040, #b8860b)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >
+                  {stat.value}
+                </div>
+                <div className="text-slate-400 text-xs mt-0.5 tracking-wide">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Scroll indicator */}
+      <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-10 animate-bounce">
+        <ChevronDown className="w-5 h-5 text-white/40" />
       </div>
     </section>
   );

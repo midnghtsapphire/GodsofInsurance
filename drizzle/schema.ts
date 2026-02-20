@@ -1,6 +1,6 @@
 import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json, decimal } from "drizzle-orm/mysql-core";
 
-// ─── Users ───────────────────────────────────────────────────────────
+// --- Users -----------------------------------------------------------
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
   openId: varchar("openId", { length: 64 }).notNull().unique(),
@@ -18,7 +18,7 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// ─── Quote Submissions (Lead Gen Core) ───────────────────────────────
+// --- Quote Submissions (Lead Gen Core) -------------------------------
 export const quoteSubmissions = mysqlTable("quote_submissions", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId"),
@@ -46,7 +46,7 @@ export const quoteSubmissions = mysqlTable("quote_submissions", {
 export type QuoteSubmission = typeof quoteSubmissions.$inferSelect;
 export type InsertQuoteSubmission = typeof quoteSubmissions.$inferInsert;
 
-// ─── Subscriptions ───────────────────────────────────────────────────
+// --- Subscriptions ---------------------------------------------------
 export const subscriptions = mysqlTable("subscriptions", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
@@ -65,7 +65,7 @@ export const subscriptions = mysqlTable("subscriptions", {
 export type Subscription = typeof subscriptions.$inferSelect;
 export type InsertSubscription = typeof subscriptions.$inferInsert;
 
-// ─── Token Ledger ────────────────────────────────────────────────────
+// --- Token Ledger ----------------------------------------------------
 export const tokenLedger = mysqlTable("token_ledger", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
@@ -78,7 +78,7 @@ export const tokenLedger = mysqlTable("token_ledger", {
 
 export type TokenLedgerEntry = typeof tokenLedger.$inferSelect;
 
-// ─── State Compliance Data ───────────────────────────────────────────
+// --- State Compliance Data -------------------------------------------
 export const stateCompliance = mysqlTable("state_compliance", {
   id: int("id").autoincrement().primaryKey(),
   stateCode: varchar("stateCode", { length: 2 }).notNull(),
@@ -97,7 +97,7 @@ export const stateCompliance = mysqlTable("state_compliance", {
 
 export type StateComplianceData = typeof stateCompliance.$inferSelect;
 
-// ─── Analytics Events ────────────────────────────────────────────────
+// --- Analytics Events ------------------------------------------------
 export const analyticsEvents = mysqlTable("analytics_events", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId"),
@@ -109,3 +109,31 @@ export const analyticsEvents = mysqlTable("analytics_events", {
 });
 
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+
+// --- Public Record Leads (Lead Generation Engine) --------------------
+export const publicLeads = mysqlTable("public_leads", {
+  id: int("id").autoincrement().primaryKey(),
+  sourceType: mysqlEnum("sourceType", [
+    "marriage_license", "home_purchase", "business_filing", "birth_record", "divorce_record", "vehicle_registration"
+  ]).notNull(),
+  sourceState: varchar("sourceState", { length: 2 }).notNull(),
+  sourceCounty: varchar("sourceCounty", { length: 100 }),
+  recordDate: timestamp("recordDate"),
+  fullName: varchar("fullName", { length: 255 }),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 32 }),
+  address: text("address"),
+  suggestedVertical: mysqlEnum("suggestedVertical", [
+    "sr22_fr44", "burial", "tiny_home", "pet", "gig_economy", "life", "home"
+  ]).notNull(),
+  status: mysqlEnum("status", ["new", "contacted", "qualified", "converted", "dead"]).default("new").notNull(),
+  rawData: json("rawData"),
+  notes: text("notes"),
+  assignedUserId: int("assignedUserId"),
+  contactedAt: timestamp("contactedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PublicLead = typeof publicLeads.$inferSelect;
+export type InsertPublicLead = typeof publicLeads.$inferInsert;

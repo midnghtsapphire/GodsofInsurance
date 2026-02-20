@@ -7,6 +7,7 @@ import {
   tokenLedger,
   stateCompliance,
   analyticsEvents,
+  publicLeads, InsertPublicLead, PublicLead,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -24,7 +25,7 @@ export async function getDb() {
   return _db;
 }
 
-// ─── User Helpers ────────────────────────────────────────────────────
+// --- User Helpers ----------------------------------------------------
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) throw new Error("User openId is required for upsert");
   const db = await getDb();
@@ -75,7 +76,7 @@ export async function getAllUsers() {
   return db.select().from(users).orderBy(desc(users.createdAt));
 }
 
-// ─── Quote Submission Helpers ────────────────────────────────────────
+// --- Quote Submission Helpers ----------------------------------------
 export async function createQuoteSubmission(data: InsertQuoteSubmission) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -133,7 +134,7 @@ export async function getUserQuoteSubmissions(userId: number) {
   return db.select().from(quoteSubmissions).where(eq(quoteSubmissions.userId, userId)).orderBy(desc(quoteSubmissions.createdAt));
 }
 
-// ─── Subscription Helpers ────────────────────────────────────────────
+// --- Subscription Helpers --------------------------------------------
 export async function getUserSubscription(userId: number) {
   const db = await getDb();
   if (!db) return null;
@@ -149,7 +150,7 @@ export async function upsertSubscription(data: InsertSubscription) {
   });
 }
 
-// ─── Token Helpers ───────────────────────────────────────────────────
+// --- Token Helpers ---------------------------------------------------
 export async function getTokenBalance(userId: number): Promise<number> {
   const db = await getDb();
   if (!db) return 0;
@@ -171,7 +172,7 @@ export async function addTokenTransaction(userId: number, amount: number, type: 
   return newBalance;
 }
 
-// ─── State Compliance Helpers ────────────────────────────────────────
+// --- State Compliance Helpers ----------------------------------------
 export async function getStateComplianceData(stateCode?: string) {
   const db = await getDb();
   if (!db) return [];
@@ -181,7 +182,7 @@ export async function getStateComplianceData(stateCode?: string) {
   return db.select().from(stateCompliance);
 }
 
-// ─── Analytics Helpers ───────────────────────────────────────────────
+// --- Analytics Helpers -----------------------------------------------
 export async function trackEvent(userId: number | null, eventType: string, eventData?: unknown, page?: string, vertical?: string) {
   const db = await getDb();
   if (!db) return;
@@ -228,4 +229,56 @@ export async function getLeadsByState() {
     state: quoteSubmissions.state,
     count: count(),
   }).from(quoteSubmissions).groupBy(quoteSubmissions.state);
+}
+
+// --- Public Lead Generation Helpers ----------------------------------
+export async function createPublicLead(data: InsertPublicLead): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(publicLeads).values(data);
+}
+
+export async function getPublicLeads(opts?: {
+  status?: PublicLead["status"];
+  sourceType?: PublicLead["sourceType"];
+  sourceState?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [];
+  if (opts?.status) conditions.push(eq(publicLeads.status, opts.status));
+  if (opts?.sourceType) conditions.push(eq(publicLeads.sourceType, opts.sourceType));
+  if (opts?.sourceState) conditions.push(eq(publicLeads.sourceState, opts.sourceState));
+  const q = db.select().from(publicLeads).orderBy(desc(publicLeads.createdAt)).limit(opts?.limit ?? 50).offset(opts?.offset ?? 0);
+  return conditions.length > 0 ? q.where(and(...conditions)) : q;
+}
+
+export async function updatePublicLeadStatus(id: number, status: PublicLead["status"], notes?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updateData: Record<string, unknown> = { status };
+  if (notes !== undefined) updateData.notes = notes;
+  if (status === "contacted") updateData.contactedAt = new Date();
+  await db.update(publicLeads).set(updateData).where(eq(publicLeads.id, id));
+}
+
+export async function getPublicLeadStats() {
+  const db = await getDb();
+  if (!db) return { total: 0, new: 0, contacted: 0, qualified: 0, converted: 0 };
+  const result = await db.select({
+    total: count(),
+    newLeads: sql<number>`SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END)`,
+    contacted: sql<number>`SUM(CASE WHEN status = 'contacted' THEN 1 ELSE 0 END)`,
+    qualified: sql<number>`SUM(CASE WHEN status = 'qualified' THEN 1 ELSE 0 END)`,
+    converted: sql<number>`SUM(CASE WHEN status = 'converted' THEN 1 ELSE 0 END)`,
+  }).from(publicLeads);
+  return {
+    total: result[0]?.total ?? 0,
+    new: Number(result[0]?.newLeads ?? 0),
+    contacted: Number(result[0]?.contacted ?? 0),
+    qualified: Number(result[0]?.qualified ?? 0),
+    converted: Number(result[0]?.converted ?? 0),
+  };
 }

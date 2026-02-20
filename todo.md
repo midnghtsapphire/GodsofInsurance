@@ -121,9 +121,33 @@
 - [ ] Integration with quote submission system — FUTURE
 
 ## Design & Branding
-- [x] Rethemed entire app to white + cherry blossom aesthetic
-- [x] Japanese minimalist design with sakura branches
-- [x] Chibi mascot character (goddess in pink kimono)
-- [x] Noto Serif JP display font + DM Sans body font
-- [x] Soft pink color palette (sakura pinks)
+- [x] Zeus/Greek mythology theme (dark navy + Olympic gold + marble)
+- [x] Zeus splash screen as hero background
+- [x] Zeus medallion logo
+- [x] Cinzel serif display font (Greek/Roman aesthetic)
+- [x] Gold gradient color palette
 - [x] Accessibility panel with 5 WCAG AAA modes
+
+## Lead Generation Engine (Blue Ocean Feature)
+- [x] publicLeads database table (public records)
+- [x] Lead Gen Engine page (/lead-gen) — admin only
+- [x] Manual lead seeding form
+- [x] AI bulk extraction from raw public record data
+- [x] Lead status management (new/contacted/qualified/converted/dead)
+- [x] Source type mapping (marriage_license, home_purchase, business_filing, birth_record, divorce_record, vehicle_registration)
+- [x] FOSS-first philosophy documented in UI
+- [x] 12 lead gen tests passing
+
+## Tests (Updated)
+- [x] Auth tests (1)
+- [x] Router tests (22)
+- [x] AI chat tests (8)
+- [x] Lead gen tests (12)
+- [x] All 43 tests passing
+- [x] Zero TypeScript errors
+- [x] Dev server running and healthy
+
+## Deployment
+- [ ] Push to MIDNGHTSAPPHIRE/GodsofInsurance on GitHub
+- [ ] Deploy live via Manus
+- [ ] Add to meetaudreyevans.com hub

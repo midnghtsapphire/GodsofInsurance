@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { HelpCircle } from "lucide-react";
 
 const faqs = [
   {
@@ -20,7 +20,7 @@ const faqs = [
   },
   {
     q: "How fast can I get my SR-22 filed?",
-    a: "With ReinstatePro, most SR-22 filings are completed same-day through electronic filing. In states that accept electronic filings, your certificate can be on file with the DMV within hours.",
+    a: "With Gods of Insurance, most SR-22 filings are completed same-day through electronic filing. In states that accept electronic filings, your certificate can be on file with the DMV within hours.",
   },
   {
     q: "Will SR-22 affect my insurance rates?",
@@ -38,25 +38,51 @@ const faqs = [
 
 export default function FAQ() {
   return (
-    <section className="py-20 bg-background" id="faq">
+    <section className="py-20" style={{ background: "linear-gradient(180deg, #f8f5f0 0%, #ffffff 100%)" }} id="faq">
       <div className="container max-w-3xl">
+        {/* Section header */}
         <div className="text-center mb-14">
-          <Badge variant="outline" className="mb-4">FAQ</Badge>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ fontFamily: "var(--font-display)" }}>
+          <div
+            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-4"
+            style={{
+              background: "rgba(184,134,11,0.10)",
+              border: "1px solid rgba(184,134,11,0.25)",
+            }}
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
+            <span
+              className="text-amber-700 text-xs font-medium tracking-widest uppercase"
+              style={{ fontFamily: "Cinzel, serif" }}
+            >
+              FAQ
+            </span>
+          </div>
+          <h2
+            className="text-3xl md:text-4xl font-bold text-[#0a1628] mb-4"
+            style={{ fontFamily: "Cinzel, serif", letterSpacing: "0.02em" }}
+          >
             Frequently Asked Questions
           </h2>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-slate-600 text-lg">
             Everything you need to know about SR-22, FR-44, and our insurance services.
           </p>
         </div>
 
         <Accordion type="single" collapsible className="space-y-3">
           {faqs.map((faq, i) => (
-            <AccordionItem key={i} value={`faq-${i}`} className="bg-muted/30 rounded-xl border-0 px-6">
-              <AccordionTrigger className="text-left font-medium hover:no-underline py-5">
+            <AccordionItem
+              key={i}
+              value={`faq-${i}`}
+              className="rounded-xl border px-6"
+              style={{ borderColor: "rgba(184,134,11,0.15)", background: "white" }}
+            >
+              <AccordionTrigger
+                className="text-left font-medium hover:no-underline py-5 text-[#0a1628] hover:text-amber-700"
+                style={{ fontFamily: "EB Garamond, Georgia, serif", fontSize: "1rem" }}
+              >
                 {faq.q}
               </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+              <AccordionContent className="text-slate-600 leading-relaxed pb-5">
                 {faq.a}
               </AccordionContent>
             </AccordionItem>

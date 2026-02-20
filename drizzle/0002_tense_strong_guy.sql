@@ -1,0 +1,20 @@
+CREATE TABLE `public_leads` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`sourceType` enum('marriage_license','home_purchase','business_filing','birth_record','divorce_record','vehicle_registration') NOT NULL,
+	`sourceState` varchar(2) NOT NULL,
+	`sourceCounty` varchar(100),
+	`recordDate` timestamp,
+	`fullName` varchar(255),
+	`email` varchar(320),
+	`phone` varchar(32),
+	`address` text,
+	`suggestedVertical` enum('sr22_fr44','burial','tiny_home','pet','gig_economy','life','home') NOT NULL,
+	`status` enum('new','contacted','qualified','converted','dead') NOT NULL DEFAULT 'new',
+	`rawData` json,
+	`notes` text,
+	`assignedUserId` int,
+	`contactedAt` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `public_leads_id` PRIMARY KEY(`id`)
+);

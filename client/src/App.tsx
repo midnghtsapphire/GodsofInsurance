@@ -14,6 +14,7 @@ import Compliance from "./pages/Compliance";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import Compare from "./pages/Compare";
+import LeadGen from "./pages/LeadGen";
 import AIChatAssistant from "./components/AIChatAssistant";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/compliance" component={Compliance} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/admin" component={Admin} />
+      <Route path="/lead-gen" component={LeadGen} />
       <Route path="/compare" component={Compare} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

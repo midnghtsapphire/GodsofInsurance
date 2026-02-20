@@ -38,7 +38,7 @@ function createAdminContext(): TrpcContext {
   return createUserContext({ id: 99, role: "admin", openId: "admin-user-123", email: "admin@example.com", name: "Admin" });
 }
 
-// ─── Auth Tests ──────────────────────────────────────────────────────────────
+// --- Auth Tests --------------------------------------------------------------
 
 describe("auth.me", () => {
   it("returns null for unauthenticated users", async () => {
@@ -57,7 +57,7 @@ describe("auth.me", () => {
   });
 });
 
-// ─── Quote Submission Validation Tests ───────────────────────────────────────
+// --- Quote Submission Validation Tests ---------------------------------------
 
 describe("quotes.submit", () => {
   it("rejects submission without consent", async () => {
@@ -126,7 +126,7 @@ describe("quotes.submit", () => {
   });
 });
 
-// ─── Admin Access Control Tests ──────────────────────────────────────────────
+// --- Admin Access Control Tests ----------------------------------------------
 
 describe("admin access control", () => {
   it("denies non-admin users from listing leads", async () => {
@@ -162,7 +162,7 @@ describe("admin access control", () => {
   });
 });
 
-// ─── Protected Route Tests ───────────────────────────────────────────────────
+// --- Protected Route Tests ---------------------------------------------------
 
 describe("protected routes", () => {
   it("denies unauthenticated users from viewing submissions", async () => {
@@ -195,7 +195,7 @@ describe("protected routes", () => {
   });
 });
 
-// ─── Billing Input Validation Tests ──────────────────────────────────────────
+// --- Billing Input Validation Tests ------------------------------------------
 
 describe("billing.useToken validation", () => {
   it("rejects negative token amounts", async () => {
@@ -213,7 +213,7 @@ describe("billing.useToken validation", () => {
   });
 });
 
-// ─── Compliance Input Validation Tests ───────────────────────────────────────
+// --- Compliance Input Validation Tests ---------------------------------------
 
 describe("compliance.getByState validation", () => {
   it("rejects invalid state code length", async () => {
@@ -224,7 +224,7 @@ describe("compliance.getByState validation", () => {
   });
 });
 
-// ─── Quote Update Status Validation ──────────────────────────────────────────
+// --- Quote Update Status Validation ------------------------------------------
 
 describe("quotes.updateStatus validation", () => {
   it("rejects invalid status values", async () => {
