@@ -14,6 +14,7 @@ import Compliance from "./pages/Compliance";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import Compare from "./pages/Compare";
+import AIChatAssistant from "./components/AIChatAssistant";
 
 function Router() {
   return (
@@ -41,6 +42,7 @@ function App() {
             <Toaster />
             <Router />
             <AccessibilityPanel />
+            <AIChatAssistant />
           </TooltipProvider>
         </AccessibilityProvider>
       </ThemeProvider>

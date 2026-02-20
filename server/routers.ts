@@ -123,8 +123,48 @@ export const appRouter = router({
     }),
   }),
 
-  // ─── AI Quote Comparison ────────────────────────────────────────────
+  // ─── AI Chat Assistant ────────────────────────────────────────────────
   ai: router({
+    chat: publicProcedure
+      .input(z.object({
+        messages: z.array(z.object({
+          role: z.enum(["user", "assistant"]),
+          content: z.string(),
+        })),
+        userMessage: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a helpful insurance assistant for Gods of Insurance (ReinstatePro). You help customers with:
+- SR-22 and FR-44 filings
+- Burial and final expense insurance
+- Tiny home and mobile home coverage
+- Pet insurance (including exotic, therapy, rescue, foster, breeder)
+- Gig economy coverage for rideshare and delivery drivers
+- State compliance requirements
+- Quote comparisons
+
+Be friendly, professional, and concise. Always encourage users to get a free quote when appropriate. Provide accurate information about coverage options and filing processes.`,
+            },
+            ...input.messages.map((m) => ({
+              role: m.role as "user" | "assistant",
+              content: m.content,
+            })),
+            {
+              role: "user",
+              content: input.userMessage,
+            },
+          ],
+        });
+
+        const rawContent = response.choices?.[0]?.message?.content;
+        const reply = typeof rawContent === 'string' ? rawContent : 'I apologize, I could not process your request. Please try again.';
+        return { reply };
+      }),
+
     compareQuotes: protectedProcedure
       .input(z.object({
         vertical: z.string(),
@@ -192,7 +232,7 @@ export const appRouter = router({
         } catch {
           return { carriers: [], recommendation: "Unable to generate comparison", disclaimer: "For informational purposes only." };
         }
-      }),
+       }),
   }),
 
   // ─── Analytics (Admin) ──────────────────────────────────────────────
