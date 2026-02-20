@@ -11,8 +11,16 @@ import {
   trackEvent, getAnalyticsSummary, getLeadsByVertical, getLeadsByState,
   getAllUsers,
   createPublicLead, getPublicLeads, updatePublicLeadStatus, getPublicLeadStats,
+  createSupportTicket, getSupportTickets, getTicketById, updateTicketStatus, addTicketReply, getTicketReplies,
+  createAgentGoal, getUserAgentGoals, updateAgentGoalProgress, createCheckIn, getUserCheckIns,
+  getScraperJobs, createScraperJob, updateScraperJobStatus,
+  getPhoneCallLogs, createPhoneCallLog,
 } from "./db";
+import Stripe from "stripe";
+import { PLANS, TOKEN_PACK_PRICES } from "./stripe/products";
 import { invokeLLM } from "./_core/llm";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-01-28.clover" });
 
 // Admin guard middleware
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -88,27 +96,7 @@ export const appRouter = router({
       }),
   }),
 
-  // --- Subscriptions & Tokens -----------------------------------------
-  billing: router({
-    getSubscription: protectedProcedure.query(async ({ ctx }) => {
-      const sub = await getUserSubscription(ctx.user.id);
-      const balance = await getTokenBalance(ctx.user.id);
-      return { subscription: sub, tokenBalance: balance };
-    }),
-
-    getTokenBalance: protectedProcedure.query(async ({ ctx }) => {
-      return getTokenBalance(ctx.user.id);
-    }),
-
-    useToken: protectedProcedure
-      .input(z.object({ amount: z.number().min(1), description: z.string() }))
-      .mutation(async ({ input, ctx }) => {
-        const balance = await getTokenBalance(ctx.user.id);
-        if (balance < input.amount) throw new TRPCError({ code: "BAD_REQUEST", message: "Insufficient tokens" });
-        const newBalance = await addTokenTransaction(ctx.user.id, -input.amount, "debit", input.description);
-        return { newBalance };
-      }),
-  }),
+    // --- Subscriptions & Tokens (merged into billing below) ---------------
 
   // --- State Compliance -----------------------------------------------
   compliance: router({
@@ -377,6 +365,270 @@ Be friendly, professional, and concise. Always encourage users to get a free quo
       return getAllUsers();
     }),
   }),
-});
 
+  // --- Stripe Billing ------------------------------------------------
+  billing: router({
+    plans: publicProcedure.query(() => Object.values(PLANS)),
+    mySubscription: protectedProcedure.query(async ({ ctx }) => {
+      return getUserSubscription(ctx.user.id);
+    }),
+    createCheckout: protectedProcedure
+      .input(z.object({
+        tier: z.enum(["small", "medium", "large", "enterprise"]),
+        interval: z.enum(["monthly", "yearly"]).default("monthly"),
+        origin: z.string().url(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const plan = PLANS[input.tier];
+        if (!plan) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid plan" });
+        const priceCents = input.interval === "yearly" ? plan.yearlyPriceCents : plan.monthlyPriceCents;
+        const session = await stripe.checkout.sessions.create({
+          mode: "subscription",
+          customer_email: ctx.user.email ?? undefined,
+          allow_promotion_codes: true,
+          client_reference_id: ctx.user.id.toString(),
+          metadata: {
+            user_id: ctx.user.id.toString(),
+            customer_email: ctx.user.email ?? "",
+            customer_name: ctx.user.name ?? "",
+            tier: input.tier,
+          },
+          line_items: [{
+            price_data: {
+              currency: "usd",
+              recurring: { interval: input.interval === "yearly" ? "year" : "month" },
+              unit_amount: priceCents,
+              product_data: {
+                name: `Gods of Insurance — ${plan.name} Plan`,
+                description: plan.description,
+              },
+            },
+            quantity: 1,
+          }],
+          success_url: `${input.origin}/dashboard?billing=success`,
+          cancel_url: `${input.origin}/pricing?billing=canceled`,
+        });
+        return { url: session.url };
+      }),
+    buyTokens: protectedProcedure
+      .input(z.object({
+        pack: z.enum(["pack_50", "pack_200", "pack_500"]),
+        origin: z.string().url(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const pack = TOKEN_PACK_PRICES[input.pack];
+        if (!pack) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid token pack" });
+        const session = await stripe.checkout.sessions.create({
+          mode: "payment",
+          customer_email: ctx.user.email ?? undefined,
+          allow_promotion_codes: true,
+          client_reference_id: ctx.user.id.toString(),
+          metadata: {
+            user_id: ctx.user.id.toString(),
+            type: "token_purchase",
+            tokens: pack.tokens.toString(),
+            pack: input.pack,
+          },
+          line_items: [{
+            price_data: {
+              currency: "usd",
+              unit_amount: pack.priceCents,
+              product_data: { name: `${pack.tokens} AI Tokens — Gods of Insurance` },
+            },
+            quantity: 1,
+          }],
+          success_url: `${input.origin}/dashboard?tokens=purchased`,
+          cancel_url: `${input.origin}/pricing?tokens=canceled`,
+        });
+        return { url: session.url };
+      }),
+    tokenBalance: protectedProcedure.query(async ({ ctx }) => {
+      const balance = await getTokenBalance(ctx.user.id);
+      return { balance };
+    }),
+  }),
+
+  // --- Support Tickets ------------------------------------------------
+  support: router({
+    create: publicProcedure
+      .input(z.object({
+        subject: z.string().min(5).max(500),
+        body: z.string().min(10),
+        category: z.enum(["billing", "quote", "technical", "compliance", "general"]).default("general"),
+        priority: z.enum(["low", "normal", "high", "urgent"]).default("normal"),
+        guestEmail: z.string().email().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await createSupportTicket({
+          ...input,
+          userId: ctx.user?.id ?? null,
+          guestEmail: input.guestEmail ?? null,
+        });
+        return { id };
+      }),
+    myTickets: protectedProcedure.query(async ({ ctx }) => {
+      return getSupportTickets({ userId: ctx.user.id });
+    }),
+    getTicket: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const ticket = await getTicketById(input.id);
+        if (!ticket) throw new TRPCError({ code: "NOT_FOUND" });
+        if (ticket.userId !== ctx.user.id && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const replies = await getTicketReplies(input.id);
+        return { ticket, replies };
+      }),
+    reply: protectedProcedure
+      .input(z.object({ ticketId: z.number(), body: z.string().min(1) }))
+      .mutation(async ({ input, ctx }) => {
+        const ticket = await getTicketById(input.ticketId);
+        if (!ticket) throw new TRPCError({ code: "NOT_FOUND" });
+        if (ticket.userId !== ctx.user.id && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        await addTicketReply(input.ticketId, ctx.user.id, input.body, ctx.user.role === "admin");
+        return { success: true };
+      }),
+    // Admin
+    allTickets: adminProcedure.query(async () => getSupportTickets()),
+    updateStatus: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["open", "in_progress", "waiting", "resolved", "closed"]),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await updateTicketStatus(input.id, input.status, ctx.user.id);
+        return { success: true };
+      }),
+  }),
+
+  // --- Agent Motivation -----------------------------------------------
+  agent: router({
+    getAffirmation: protectedProcedure.query(async ({ ctx }) => {
+      const affirmations = [
+        "Every rejection is one step closer to a yes. Zeus himself faced battles before victory.",
+        "You are not selling insurance — you are giving families the gift of peace of mind.",
+        "The gods of Olympus did not build empires in a day. Your pipeline is growing.",
+        "Every 'no' you hear today is protecting someone else's 'yes' tomorrow.",
+        "Insurance agents are the unsung heroes — you protect what people love most.",
+        "Your persistence today is someone's financial security tomorrow.",
+        "The best agents aren't born — they're forged through every difficult call.",
+        "You have the power of Zeus behind you. Your protection is divine.",
+        "Rejection is redirection. The right client is always just ahead.",
+        "Your work matters more than you know. Families sleep better because of you.",
+        "Like Hermes, you carry messages of protection to those who need them most.",
+        "Athena's wisdom guides you. Every client conversation makes you stronger.",
+        "The storm always breaks. Your best month is always ahead of you.",
+        "You are building a legacy, not just a commission. Keep going.",
+        "Every policy you write is a shield for a family. That is divine work.",
+      ];
+      const today = new Date().toDateString();
+      const idx = (ctx.user.id + today.length) % affirmations.length;
+      return { affirmation: affirmations[idx], date: today };
+    }),
+    getAIAffirmation: protectedProcedure
+      .input(z.object({ mood: z.enum(["great", "good", "okay", "tough", "burnout"]) }))
+      .mutation(async ({ input, ctx }) => {
+        const balance = await getTokenBalance(ctx.user.id);
+        if (balance < 1) throw new TRPCError({ code: "FORBIDDEN", message: "Insufficient tokens" });
+        const moodContext = {
+          great: "They are having an amazing day and crushing their goals.",
+          good: "They are doing well but want to keep momentum.",
+          okay: "They are having an average day and need a gentle boost.",
+          tough: "They are struggling with rejections and need real encouragement.",
+          burnout: "They are experiencing burnout and need compassionate, grounding support.",
+        };
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: "You are the Oracle of Olympus — a wise, warm, powerful voice that speaks directly to insurance agents. You blend Greek mythology metaphors with practical, grounded encouragement. Keep responses to 2-3 sentences. Never be generic. Always be specific to the insurance industry." },
+            { role: "user", content: `Generate a personalized affirmation for an insurance agent. Mood context: ${moodContext[input.mood]} Name: ${ctx.user.name || "Agent"}.` },
+          ],
+        });
+        const affirmation = (response.choices[0]?.message?.content as string) || "You are doing divine work. Keep going.";
+        await addTokenTransaction(ctx.user.id, -1, "debit", "AI affirmation generated");
+        return { affirmation };
+      }),
+    myGoals: protectedProcedure.query(async ({ ctx }) => getUserAgentGoals(ctx.user.id)),
+    createGoal: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1).max(255),
+        targetAmount: z.string().optional(),
+        targetDate: z.string().optional(),
+        vertical: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await createAgentGoal({
+          userId: ctx.user.id,
+          title: input.title,
+          targetAmount: input.targetAmount ?? null,
+          targetDate: input.targetDate ? new Date(input.targetDate) : null,
+          vertical: input.vertical ?? null,
+        });
+        return { id };
+      }),
+    updateProgress: protectedProcedure
+      .input(z.object({ id: z.number(), currentAmount: z.string() }))
+      .mutation(async ({ input }) => {
+        await updateAgentGoalProgress(input.id, input.currentAmount);
+        return { success: true };
+      }),
+    checkIn: protectedProcedure
+      .input(z.object({
+        mood: z.enum(["great", "good", "okay", "tough", "burnout"]),
+        wins: z.string().optional(),
+        challenges: z.string().optional(),
+        affirmationSeen: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await createCheckIn(ctx.user.id, input.mood, input.wins, input.challenges, input.affirmationSeen);
+        return { success: true };
+      }),
+    myCheckIns: protectedProcedure.query(async ({ ctx }) => getUserCheckIns(ctx.user.id)),
+  }),
+
+  // --- Scraper Jobs (Admin) -------------------------------------------
+  scraper: router({
+    jobs: adminProcedure.query(async () => getScraperJobs()),
+    create: adminProcedure
+      .input(z.object({
+        jobType: z.string(),
+        sourceState: z.string().length(2),
+        sourceCounty: z.string().optional(),
+        targetUrl: z.string().url().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await createScraperJob({
+          jobType: input.jobType,
+          sourceState: input.sourceState,
+          sourceCounty: input.sourceCounty ?? null,
+          targetUrl: input.targetUrl ?? null,
+          nextRunAt: new Date(Date.now() + 60 * 1000),
+        });
+        return { id };
+      }),
+    toggle: adminProcedure
+      .input(z.object({ id: z.number(), enabled: z.boolean() }))
+      .mutation(async ({ input }) => {
+        await updateScraperJobStatus(input.id, input.enabled ? "pending" : "disabled");
+        return { success: true };
+      }),
+  }),
+
+  // --- Phone Logs (Admin) ---------------------------------------------
+  phone: router({
+    logs: adminProcedure.query(async () => getPhoneCallLogs()),
+    logCall: publicProcedure
+      .input(z.object({
+        callSid: z.string().optional(),
+        callerNumber: z.string().optional(),
+        detectedVertical: z.string().optional(),
+        transcription: z.string().optional(),
+        summary: z.string().optional(),
+        outcome: z.enum(["quoted", "transferred", "callback_scheduled", "no_action", "voicemail"]).optional(),
+        durationSeconds: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await createPhoneCallLog(input);
+        return { success: true };
+      }),
+  }),
+});
 export type AppRouter = typeof appRouter;

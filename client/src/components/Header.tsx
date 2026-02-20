@@ -17,7 +17,8 @@ const navLinks = [
   { label: "Verticals",  href: "/verticals" },
   { label: "Compliance", href: "/compliance" },
   { label: "AI Compare", href: "/compare" },
-  { label: "FAQ",        href: "/#faq" },
+  { label: "Phone Agent", href: "/phone" },
+  { label: "Pricing",    href: "/pricing" },
 ];
 
 const adminNavLinks = [

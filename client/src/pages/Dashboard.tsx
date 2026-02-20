@@ -21,7 +21,8 @@ const statusColors: Record<string, string> = {
 export default function Dashboard() {
   const { user, loading, isAuthenticated } = useAuth();
   const submissions = trpc.quotes.mySubmissions.useQuery(undefined, { enabled: isAuthenticated });
-  const billing = trpc.billing.getSubscription.useQuery(undefined, { enabled: isAuthenticated });
+  const billing = trpc.billing.mySubscription.useQuery(undefined, { enabled: isAuthenticated });
+  const tokenBalanceQuery = trpc.billing.tokenBalance.useQuery(undefined, { enabled: isAuthenticated });
 
   if (loading) {
     return (
@@ -52,8 +53,8 @@ export default function Dashboard() {
   }
 
   const quotes = submissions.data ?? [];
-  const sub = billing.data?.subscription;
-  const tokenBalance = billing.data?.tokenBalance ?? 0;
+  const sub = billing.data;
+  const tokenBalance = tokenBalanceQuery.data?.balance ?? 0;
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -151,3 +151,54 @@
 - [ ] Push to MIDNGHTSAPPHIRE/GodsofInsurance on GitHub
 - [ ] Deploy live via Manus
 - [ ] Add to meetaudreyevans.com hub
+
+## New Pages (Sprint 2 — February 2026)
+- [x] Pricing page with Stripe checkout (/pricing)
+- [x] Agent Motivation page with daily affirmations and goals (/agent)
+- [x] Support Tickets page for customers and agents (/support)
+- [x] AI Phone Agent page with call logs and tech stack (/phone)
+
+## Documentation (/docs)
+- [x] BLUEPRINT.md — product blueprint and FOSS philosophy
+- [x] ROADMAP.md — 4-phase product roadmap
+- [x] DATA_SCHEMA.md — all 13 tables documented
+- [x] API_DOCS.md — all tRPC procedures documented
+- [x] PATENT_DISCLOSURE.md — 3 invention disclosures
+- [x] KANBAN.md — full sprint board with 52+ completed cards
+
+## Stripe Billing (Sprint 2)
+- [x] Stripe feature added via webdev_add_feature
+- [x] Stripe products.ts with all tier price IDs
+- [x] Stripe webhook handler at /api/stripe/webhook
+- [x] Checkout session creation for subscriptions and token packs
+- [x] Subscription activation on checkout.session.completed
+- [x] Token credit on token pack purchase
+- [ ] Claim Stripe sandbox at dashboard.stripe.com (user action required)
+- [ ] Test with card 4242 4242 4242 4242 (user action required)
+
+## Agent Support Features
+- [x] Agent Motivation module (daily affirmations, mood check-in)
+- [x] Commission goal tracker with visual progress
+- [x] Daily check-in journal (wins, challenges)
+- [x] AI-personalized affirmations based on mood
+- [x] Check-in history with mood trends
+- [x] agentGoals table in database
+- [x] agentCheckIns table in database
+
+## Support Tickets
+- [x] Support ticket creation (authenticated + guest)
+- [x] Ticket categories (billing, quote, technical, compliance, general)
+- [x] Priority levels (low, normal, high, urgent)
+- [x] Reply threading
+- [x] Ticket status workflow (open, in_progress, waiting, resolved, closed)
+- [x] supportTickets table in database
+- [x] supportReplies table in database
+
+## Phone Agent Infrastructure
+- [x] phoneCallLogs table in database
+- [x] phone.logs tRPC procedure (admin)
+- [x] phone.logCall tRPC procedure (webhook endpoint)
+- [x] AI Phone Agent page with FOSS stack documentation
+- [ ] Vocode deployment (Phase 2)
+- [ ] Whisper STT deployment (Phase 2)
+- [ ] Piper TTS deployment (Phase 2)

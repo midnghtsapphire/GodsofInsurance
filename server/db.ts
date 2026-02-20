@@ -282,3 +282,127 @@ export async function getPublicLeadStats() {
     converted: Number(result[0]?.converted ?? 0),
   };
 }
+
+// --- Support Tickets -------------------------------------------------
+import {
+  supportTickets, ticketReplies, InsertSupportTicket,
+  agentGoals, agentCheckIns, InsertAgentGoal,
+  scraperJobs, InsertScraperJob,
+  phoneCallLogs,
+} from "../drizzle/schema";
+
+export async function createSupportTicket(data: InsertSupportTicket) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(supportTickets).values(data).$returningId();
+  return result;
+}
+
+export async function getSupportTickets(opts?: { status?: string; userId?: number; limit?: number }) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [];
+  if (opts?.status) conditions.push(eq(supportTickets.status, opts.status as "open" | "in_progress" | "waiting" | "resolved" | "closed"));
+  if (opts?.userId) conditions.push(eq(supportTickets.userId, opts.userId));
+  const q = db.select().from(supportTickets).orderBy(desc(supportTickets.createdAt)).limit(opts?.limit ?? 50);
+  return conditions.length > 0 ? q.where(and(...conditions)) : q;
+}
+
+export async function getTicketById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [ticket] = await db.select().from(supportTickets).where(eq(supportTickets.id, id)).limit(1);
+  return ticket;
+}
+
+export async function updateTicketStatus(id: number, status: "open" | "in_progress" | "waiting" | "resolved" | "closed", adminId?: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(supportTickets).set({
+    status,
+    assignedAdminId: adminId,
+    resolvedAt: status === "resolved" || status === "closed" ? new Date() : undefined,
+  }).where(eq(supportTickets.id, id));
+}
+
+export async function addTicketReply(ticketId: number, userId: number | null, body: string, isAdmin: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(ticketReplies).values({ ticketId, userId, body, isAdmin });
+}
+
+export async function getTicketReplies(ticketId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(ticketReplies).where(eq(ticketReplies.ticketId, ticketId)).orderBy(ticketReplies.createdAt);
+}
+
+// --- Agent Motivation ------------------------------------------------
+export async function createAgentGoal(data: InsertAgentGoal) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(agentGoals).values(data).$returningId();
+  return result;
+}
+
+export async function getUserAgentGoals(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(agentGoals).where(eq(agentGoals.userId, userId)).orderBy(desc(agentGoals.createdAt));
+}
+
+export async function updateAgentGoalProgress(id: number, currentAmount: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(agentGoals).set({ currentAmount }).where(eq(agentGoals.id, id));
+}
+
+export async function createCheckIn(userId: number, mood: "great" | "good" | "okay" | "tough" | "burnout", wins?: string, challenges?: string, affirmationSeen?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(agentCheckIns).values({ userId, mood, wins, challenges, affirmationSeen });
+}
+
+export async function getUserCheckIns(userId: number, limit = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(agentCheckIns).where(eq(agentCheckIns.userId, userId)).orderBy(desc(agentCheckIns.createdAt)).limit(limit);
+}
+
+// --- Scraper Jobs ----------------------------------------------------
+export async function getScraperJobs() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(scraperJobs).orderBy(desc(scraperJobs.updatedAt));
+}
+
+export async function createScraperJob(data: InsertScraperJob) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(scraperJobs).values(data).$returningId();
+  return result;
+}
+
+export async function updateScraperJobStatus(id: number, status: "pending" | "running" | "completed" | "failed" | "disabled", leadsFound?: number, errorLog?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(scraperJobs).set({
+    status,
+    leadsFound: leadsFound ?? 0,
+    lastRunAt: new Date(),
+    errorLog,
+  }).where(eq(scraperJobs.id, id));
+}
+
+// --- Phone Call Logs -------------------------------------------------
+export async function createPhoneCallLog(data: Partial<typeof phoneCallLogs.$inferInsert>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(phoneCallLogs).values(data as typeof phoneCallLogs.$inferInsert);
+}
+
+export async function getPhoneCallLogs(limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(phoneCallLogs).orderBy(desc(phoneCallLogs.createdAt)).limit(limit);
+}
